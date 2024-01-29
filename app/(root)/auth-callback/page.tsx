@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { trpc } from "../_trpc/client";
+import { useEffect } from "react";
+import { trpc } from "../../_trpc/client";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const Page = () => {
   const router = useRouter();
-
   const { data, isLoading } = trpc.authCallback.useQuery(undefined, {
     retry: true,
     retryDelay: 500,
   });
+
+  const d = trpc.getUserFiles.useQuery();
+  console.log(d);
+
   const searchParams = useSearchParams();
   const origin = searchParams.get("origin");
 

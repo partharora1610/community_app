@@ -1,9 +1,13 @@
-import Navbar from "@/components/shared/Navbar";
+import MaxWidthWrapper from "@/components/shared/MaxWidthWrapper";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <div>{children}</div>;
+  return (
+    <div>
+      <MaxWidthWrapper>{children}</MaxWidthWrapper>
+    </div>
+  );
 }

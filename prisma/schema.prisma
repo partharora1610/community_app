@@ -10,7 +10,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+enum UPLOAD_STATUS {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
+
+  File     File[]
+}
+
+
+model File {
+  id        String   @id @default(uuid())
+  name      String
+
+  url       String
+  key       String  
+  
+  uploadStatus UPLOAD_STATUS @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  userId    String
+  User      User     @relation(fields: [userId], references: [id])
 }

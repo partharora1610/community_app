@@ -1,3 +1,5 @@
+import { trpc } from "@/app/_trpc/client";
+import Dashboard from "@/components/shared/Dashboard";
 import { db } from "@/db";
 import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
@@ -5,6 +7,8 @@ import React from "react";
 
 const page = async () => {
   const user = await currentUser();
+  const { data, isLoading } = trpc.authCallback.useQuery(undefined);
+  // console.log(trpc);
 
   if (!user) {
     redirect("/auth-callback");
@@ -20,7 +24,7 @@ const page = async () => {
     redirect("/auth-callback");
   }
 
-  return <div>Dashboard</div>;
+  return <Dashboard user={user} />;
 };
 
 export default page;
