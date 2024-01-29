@@ -1,17 +1,32 @@
-import React from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { trpc } from "../_trpc/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const page = async () => {
+const Page = () => {
   const router = useRouter();
-  const { data } = trpc.authCallback.useQuery(undefined);
 
-  if (data?.success) {
-    // user is synced to the database
-    router.push("/dashboard");
-  }
+  const { data, isLoading } = trpc.authCallback.useQuery(undefined, {
+    retry: true,
+    retryDelay: 500,
+  });
+  const searchParams = useSearchParams();
+  const origin = searchParams.get("origin");
 
-  return <div>page</div>;
+  // TODO: Handle error in the trpc route
+  useEffect(() => {
+    if (data?.success) {
+      router.push(origin ? `/${origin}` : "/dashboard");
+    }
+  }, [data]);
+
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full border-t-4 border-blue-500 border-solid border-opacity-75 h-16 w-16"></div>
+      <div className="">Setting up your account...</div>
+    </div>
+  );
 };
 
-export default page;
+export default Page;
