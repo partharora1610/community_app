@@ -1,10 +1,17 @@
+"use client";
+
 import React from "react";
 import { Button } from "../ui/button";
 import ProjectContainer from "./dashboard/ProjectContainer";
 import { trpc } from "@/app/_trpc/client";
+import UploadButton from "./UploadButton";
 
 const Dashboard = ({ user }: any) => {
-  // const { data, isLoading } = trpc.getUserFiles.useQuery();
+  const { data, isLoading } = trpc.getUserFiles.useQuery();
+
+  console.log(data);
+
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div>
@@ -15,11 +22,11 @@ const Dashboard = ({ user }: any) => {
             {user.firstName}
           </span>
         </h2>
-        <Button>Upload Pdf</Button>
+        <UploadButton isSubscribed={true} />
       </div>
 
       <div>
-        <ProjectContainer />
+        <ProjectContainer data={JSON.stringify(data)} />
       </div>
     </div>
   );

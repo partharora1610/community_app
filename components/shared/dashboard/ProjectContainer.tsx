@@ -2,17 +2,32 @@ import { trpc } from "@/app/_trpc/client";
 import React from "react";
 import ProjectCard from "./ProjectCard";
 
-const ProjectContainer = () => {
-  // const text = trpc.getUserFiles.useQuery(undefined, {});
+const ProjectContainer = ({ data }: any) => {
+  const files = JSON.parse(data);
 
-  // console.log(text);
-
+  // id: string;
+  //   userId: string;
+  //   name: string;
+  //   url: string;
+  //   key: string;
+  //   uploadStatus: $Enums.UPLOAD_STATUS;
+  //   createdAt: string;
+  //   updatedAt: string;
   return (
     <div>
-      {/* <h2>{totalProjects}</h2> */}
-      {/* {files?.map((file) => {
-        return <ProjectCard />;
-      })} */}
+      <h2>{files?.length}</h2>
+      <div className="flex gap-16">
+        {files?.map((file: any, index: any) => {
+          return (
+            <ProjectCard
+              key={index}
+              name={file.name}
+              url={file.url}
+              id={file.id}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 };

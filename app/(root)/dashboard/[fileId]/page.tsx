@@ -1,10 +1,11 @@
-import Dashboard from "@/components/shared/Dashboard";
 import { db } from "@/db";
 import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import React from "react";
 
-const page = async () => {
+const Page = async ({ params }: any) => {
+  const { fileId } = params;
+
   const user = await currentUser();
 
   if (!user) {
@@ -21,7 +22,18 @@ const page = async () => {
     redirect("/auth-callback");
   }
 
-  return <Dashboard user={JSON.stringify(user)} />;
+  const dbFile = await db.file.findFirst({
+    where: {
+      id: fileId,
+      userId: user.id,
+    },
+  });
+
+  if (!dbFile) {
+    return <div>No File Found</div>;
+  }
+
+  return <div className="">{fileId}</div>;
 };
 
-export default page;
+export default Page;

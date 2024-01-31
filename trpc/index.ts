@@ -45,38 +45,64 @@ export const appRouter = router({
     return files;
   }),
 
-  // deleteUserFile: privateProcedure
-  //   .input(
-  //     z.object({
-  //       id: z.string(),
-  //     })
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     const { user, userId } = ctx;
-  //     const { id } = input;
+  deleteUserFile: privateProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { user, userId } = ctx;
+      const { id } = input;
 
-  //     const file = await db.file.findFirst({
-  //       where: {
-  //         id,
-  //         userId,
-  //       },
-  //     });
+      const file = await db.file.findFirst({
+        where: {
+          id,
+          userId,
+        },
+      });
 
-  //     if (!file) {
-  //       throw new TRPCError({
-  //         code: "NOT_FOUND",
-  //         message: "File not found",
-  //       });
-  //     }
+      if (!file) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "File not found",
+        });
+      }
 
-  //     await db.file.delete({
-  //       where: {
-  //         id,
-  //       },
-  //     });
+      await db.file.delete({
+        where: {
+          id,
+        },
+      });
 
-  //     return;
-  //   }),
+      return;
+    }),
+
+  getFiles: privateProcedure
+    .input(
+      z.object({
+        key: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx;
+
+      const file = await db.file.findFirst({
+        where: {
+          key: input.key,
+          userId,
+        },
+      });
+
+      if (!file) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "File not found",
+        });
+      }
+
+      return file;
+    }),
 });
 
 export type AppRouter = typeof appRouter;
