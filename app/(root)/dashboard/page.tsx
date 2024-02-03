@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import React from "react";
 
-const page = async () => {
+const Page = async () => {
   const user = await currentUser();
 
   if (!user) {
@@ -24,4 +24,4 @@ const page = async () => {
   return <Dashboard user={JSON.stringify(user)} />;
 };
 
-export default page;
+export default Page;

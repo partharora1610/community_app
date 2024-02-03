@@ -3,7 +3,6 @@ import { currentUser } from "@clerk/nextjs";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { pinecone } from "@/lib/pinecone";
-import { Document } from "@langchain/core/documents";
 // import { OpenAIEmbeddings } from "@langchain/openai";
 
 // This is deprecated ==> WARNING
@@ -40,13 +39,13 @@ export const ourFileRouter = {
         const response = await fetch(file.url);
 
         const blob = await response.blob();
-        console.log(blob);
+        // console.log(blob);
 
         const loader = new PDFLoader(blob);
 
         const docs = await loader.load();
 
-        // const pagesAmount = docs.length;
+        const pagesAmount = docs.length;
         // console.log("pagesAmount", pagesAmount);
 
         const pineconeIndex = pinecone.Index("pdfgpt");

@@ -9,10 +9,7 @@ import { openai } from "@/lib/openai";
 
 import { OpenAIStream, StreamingTextResponse } from "ai";
 
-// Here we not using trpc since we want to stream the response to the client
-
 export const POST = async (req: NextRequest, res: NextResponse) => {
-  // Asking a question to the pdf file
   const body = await req.json();
 
   const user = await currentUser();
@@ -21,10 +18,8 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  // This is the zod valdiation
   const { fileId, message } = sendMessageValidator.parse(body);
 
-  // Getting the file from the user
   const dbFile = await db.file.findFirst({
     where: {
       id: fileId,
@@ -46,7 +41,6 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     },
   });
 
-  // 1.vectorize the incoming message
   const openaiEmbeddings = new OpenAIEmbeddings({
     openAIApiKey: process.env.OPENAI_API_KEY!,
   });
@@ -59,6 +53,7 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
   });
 
   const results = await vectorStore.similaritySearch(message, 4);
+  console.log(results);
 
   const previousMessages = await db.message.findMany({
     where: {
@@ -69,13 +64,13 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     },
     take: 6,
   });
-
-  // Sending the res to the openai api
+  console.log(previousMessages);
 
   const formattedMessages = previousMessages.map((message) => ({
     role: message.isUserMessage ? ("user" as const) : ("assistant" as const),
     content: dbMessage.text,
   }));
+  console.log(formattedMessages);
 
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
@@ -109,8 +104,7 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     ],
   });
 
-  // Streaming the response to the user client
-
+  // This is the stream
   const stream = OpenAIStream(response, {
     async onCompletion(completedMessage) {
       await db.message.create({
@@ -124,6 +118,5 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     },
   });
 
-  // will accept this is the context
   return new StreamingTextResponse(stream);
 };

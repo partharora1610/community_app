@@ -1,4 +1,5 @@
 "use client";
+
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import React from "react";
@@ -7,7 +8,7 @@ interface ChatContextProps {
   message: string;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   isLoading: boolean;
-  addMessage: (msg: string) => void;
+  addMessage: () => void;
 }
 
 const ChatContext = React.createContext<ChatContextProps>({
@@ -32,7 +33,13 @@ export const ChatContextProvider = ({
 
   // React Query Mutation
   const { mutate: sendMessage } = useMutation({
-    mutationFn: async ({ message }: { message: string }) => {
+    mutationFn: async ({
+      message,
+      fileId,
+    }: {
+      message: string;
+      fileId: string;
+    }) => {
       const response = await fetch("/api/message", {
         method: "POST",
         body: JSON.stringify({
@@ -51,7 +58,7 @@ export const ChatContextProvider = ({
 
   // Calls the api
   const addMessage = () => {
-    sendMessage({ message });
+    sendMessage({ message, fileId });
   };
 
   // Handles the input change
@@ -74,5 +81,7 @@ export const ChatContextProvider = ({
     </ChatContext.Provider>
   );
 };
+
+// Create a custom hook to use the ChatContext
 
 export default ChatContext;
