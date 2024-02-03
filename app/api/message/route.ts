@@ -60,7 +60,6 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
 
   const results = await vectorStore.similaritySearch(message, 4);
 
-  // Get the previous messages
   const previousMessages = await db.message.findMany({
     where: {
       fileId: dbFile.id,

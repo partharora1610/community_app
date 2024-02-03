@@ -3,8 +3,13 @@ import { currentUser } from "@clerk/nextjs";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { pinecone } from "@/lib/pinecone";
+import { Document } from "@langchain/core/documents";
+// import { OpenAIEmbeddings } from "@langchain/openai";
+
+// This is deprecated ==> WARNING
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "@langchain/pinecone";
+// import { getPineconeClient } from "@/lib/pinecone";
 
 const f = createUploadthing();
 
@@ -16,7 +21,6 @@ export const ourFileRouter = {
       if (!user) {
         throw new Error("You must be logged in to upload files");
       }
-      console.log("user", user);
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
@@ -32,34 +36,30 @@ export const ourFileRouter = {
         },
       });
 
-      // Indexing the File
       try {
-        const response = await fetch(dbFile.url);
-        const blob = await response.blob();
+        const response = await fetch(file.url);
 
-        // Load the pdf in the memory
+        const blob = await response.blob();
+        console.log(blob);
+
         const loader = new PDFLoader(blob);
 
-        const pageLevelDocs = await loader.load();
+        const docs = await loader.load();
 
-        // getting the amount of pages to check if the type of user is valid or not
-        const pagesAmount = pageLevelDocs.length;
+        // const pagesAmount = docs.length;
+        // console.log("pagesAmount", pagesAmount);
 
-        // vectorize and index the pages
         const pineconeIndex = pinecone.Index("pdfgpt");
 
-        // creating openai embeddings
         const openaiEmbeddings = new OpenAIEmbeddings({
           openAIApiKey: process.env.OPENAI_API_KEY!,
         });
 
-        // creating vector embeddings for the pages
-        await PineconeStore.fromDocuments(pageLevelDocs, openaiEmbeddings, {
+        await PineconeStore.fromDocuments(docs, openaiEmbeddings, {
           pineconeIndex,
           namespace: dbFile.id,
         });
 
-        // updating the file status in our db
         await db.file.update({
           where: {
             id: dbFile.id,
@@ -69,7 +69,6 @@ export const ourFileRouter = {
           },
         });
       } catch (error) {
-        // updating the file status in our db
         await db.file.update({
           where: {
             id: dbFile.id,
