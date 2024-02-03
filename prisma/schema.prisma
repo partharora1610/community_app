@@ -24,6 +24,7 @@ model User {
   email     String   @unique
 
   File     File[]
+  Message  Message[]
 }
 
 
@@ -33,6 +34,8 @@ model File {
 
   url       String
   key       String  
+  Message   Message[]
+
   
   uploadStatus UPLOAD_STATUS @default(PENDING)
 
@@ -41,4 +44,22 @@ model File {
  
   userId    String
   User      User     @relation(fields: [userId], references: [id])
+
+  
+}
+
+model Message{
+  id        String   @id @default(uuid())
+  text      String    @db.Text()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isUserMessage Boolean @default(false)
+
+  userId    String
+  User      User     @relation(fields: [userId], references: [id])
+
+  fileId    String?
+  File      File?    @relation(fields: [fileId], references: [id])
 }

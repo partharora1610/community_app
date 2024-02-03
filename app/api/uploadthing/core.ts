@@ -1,6 +1,9 @@
 import { db } from "@/db";
 import { currentUser } from "@clerk/nextjs";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
+import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import { pinecone } from "@/lib/pinecone";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const f = createUploadthing();
 
@@ -18,7 +21,7 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       const { userId } = metadata;
 
-      await db.file.create({
+      const dbFile = await db.file.create({
         data: {
           key: file.key,
           userId,
@@ -27,6 +30,27 @@ export const ourFileRouter = {
           uploadStatus: "PROCESSING",
         },
       });
+
+      // Indexing the File
+      try {
+        const response = await fetch(dbFile.url);
+        const blob = await response.blob();
+
+        const loader = new PDFLoader(blob);
+
+        const pageLevelDocs = await loader.load();
+
+        const pagesAmount = pageLevelDocs.length;
+
+        // vectorixe and index the pages
+        const pinecodeIndex = pinecone.Index("pdfgpt");
+
+        // Need to get the api key from the environment
+        // Set up the openai key
+        const openaiEmbeddings = new OpenAIEmbeddings({
+          openAIApiKey: process.env.OPENAI_API_KEY!,
+        });
+      } catch (error) {}
     }),
 } satisfies FileRouter;
 
