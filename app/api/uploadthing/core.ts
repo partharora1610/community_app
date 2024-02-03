@@ -4,6 +4,7 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { pinecone } from "@/lib/pinecone";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { PineconeStore } from "@langchain/pinecone";
 
 const f = createUploadthing();
 
@@ -36,21 +37,50 @@ export const ourFileRouter = {
         const response = await fetch(dbFile.url);
         const blob = await response.blob();
 
+        // Load the pdf in the memory
         const loader = new PDFLoader(blob);
 
         const pageLevelDocs = await loader.load();
 
+        // getting the amount of pages to check if the type of user is valid or not
         const pagesAmount = pageLevelDocs.length;
 
-        // vectorixe and index the pages
-        const pinecodeIndex = pinecone.Index("pdfgpt");
+        // vectorize and index the pages
+        const pineconeIndex = pinecone.Index("pdfgpt");
 
-        // Need to get the api key from the environment
-        // Set up the openai key
+        // creating openai embeddings
         const openaiEmbeddings = new OpenAIEmbeddings({
           openAIApiKey: process.env.OPENAI_API_KEY!,
         });
-      } catch (error) {}
+
+        // creating vector embeddings for the pages
+        await PineconeStore.fromDocuments(pageLevelDocs, openaiEmbeddings, {
+          pineconeIndex,
+          namespace: dbFile.id,
+        });
+
+        // updating the file status in our db
+        await db.file.update({
+          where: {
+            id: dbFile.id,
+          },
+          data: {
+            uploadStatus: "DONE",
+          },
+        });
+      } catch (error) {
+        // updating the file status in our db
+        await db.file.update({
+          where: {
+            id: dbFile.id,
+          },
+          data: {
+            uploadStatus: "FAILED",
+          },
+        });
+
+        console.error("Error indexing the file", error);
+      }
     }),
 } satisfies FileRouter;
 
