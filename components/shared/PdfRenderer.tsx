@@ -19,8 +19,6 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
   const [numPages, setNumPages] = React.useState<number>();
   const [currentPage, setCurrentPage] = React.useState<number>(1);
 
-  console.log(url);
-
   return (
     <div className="w-full">
       <div className="">

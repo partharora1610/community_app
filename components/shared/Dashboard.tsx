@@ -8,8 +8,6 @@ import UploadButton from "./UploadButton";
 const Dashboard = ({ user }: any) => {
   const { data, isLoading } = trpc.getUserFiles.useQuery();
 
-  console.log(data);
-
   if (isLoading) return <div>Loading...</div>;
 
   return (

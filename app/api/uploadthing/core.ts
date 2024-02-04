@@ -39,14 +39,12 @@ export const ourFileRouter = {
         const response = await fetch(file.url);
 
         const blob = await response.blob();
-        // console.log(blob);
 
         const loader = new PDFLoader(blob);
 
         const docs = await loader.load();
 
         const pagesAmount = docs.length;
-        // console.log("pagesAmount", pagesAmount);
 
         const pineconeIndex = pinecone.Index("pdfgpt");
 

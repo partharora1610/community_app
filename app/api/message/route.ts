@@ -53,7 +53,6 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
   });
 
   const results = await vectorStore.similaritySearch(message, 4);
-  console.log(results);
 
   const previousMessages = await db.message.findMany({
     where: {
@@ -64,13 +63,11 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     },
     take: 6,
   });
-  console.log(previousMessages);
 
   const formattedMessages = previousMessages.map((message) => ({
     role: message.isUserMessage ? ("user" as const) : ("assistant" as const),
     content: dbMessage.text,
   }));
-  console.log(formattedMessages);
 
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",

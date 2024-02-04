@@ -12,7 +12,6 @@ const Page = () => {
   });
 
   const d = trpc.getUserFiles.useQuery();
-  // console.log(d);
 
   const searchParams = useSearchParams();
   const origin = searchParams.get("origin");

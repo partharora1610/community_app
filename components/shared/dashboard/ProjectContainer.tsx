@@ -5,14 +5,6 @@ import ProjectCard from "./ProjectCard";
 const ProjectContainer = ({ data }: any) => {
   const files = JSON.parse(data);
 
-  // id: string;
-  //   userId: string;
-  //   name: string;
-  //   url: string;
-  //   key: string;
-  //   uploadStatus: $Enums.UPLOAD_STATUS;
-  //   createdAt: string;
-  //   updatedAt: string;
   return (
     <div>
       <h2>{files?.length}</h2>

@@ -3,7 +3,6 @@ import React from "react";
 
 const Page = () => {
   const data = trpc.getUserFiles.useQuery();
-  console.log(data);
 
   return <div>Page</div>;
 };

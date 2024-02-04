@@ -36,8 +36,8 @@ export const ChatContextProvider = ({
 
   const backupMessgae = useRef<string>("");
 
-  // React Query Mutation
   const { mutate: sendMessage } = useMutation({
+    // Hitting our nextjs api route to send the message to the api
     mutationFn: async ({
       message,
       fileId,
@@ -60,6 +60,8 @@ export const ChatContextProvider = ({
       setIsLoading(false);
       return response.body;
     },
+
+    // Setting up the optimistic updates on the client
     onMutate: async ({ message }) => {
       setIsLoading(true);
       backupMessgae.current = message;
@@ -107,10 +109,11 @@ export const ChatContextProvider = ({
           prevMessage?.pages.flatMap((page) => page.messages) ?? [],
       };
     },
+
+    // Setting up the realtime response on the client
     onSuccess: async (stream) => {
       setIsLoading(false);
 
-      // get the stream
       if (!stream) {
         return toast({
           title: "Error",
@@ -144,6 +147,7 @@ export const ChatContextProvider = ({
             };
           }
 
+          //
           let isAiCreated = old.pages.some((page) =>
             page.messages.some((message) => message.id === "ai-response")
           );
