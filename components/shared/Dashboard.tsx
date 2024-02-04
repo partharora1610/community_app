@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Button } from "../ui/button";
 import ProjectContainer from "./dashboard/ProjectContainer";
 import { trpc } from "@/app/_trpc/client";
 import UploadButton from "./UploadButton";

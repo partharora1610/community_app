@@ -104,8 +104,6 @@ export const appRouter = router({
         messages,
         nextCursor,
       };
-
-      return { messages, nextCursor };
     }),
 
   deleteUserFile: privateProcedure

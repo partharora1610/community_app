@@ -1,8 +1,9 @@
 "use client";
 
+import { trpc } from "@/app/_trpc/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import React from "react";
+import React, { useRef } from "react";
 
 interface ChatContextProps {
   message: string;
@@ -31,6 +32,10 @@ export const ChatContextProvider = ({
   const [message, setMessage] = React.useState<string>("");
   const { toast } = useToast();
 
+  const utils = trpc.useContext();
+
+  const backupMessgae = useRef<string>("");
+
   // React Query Mutation
   const { mutate: sendMessage } = useMutation({
     mutationFn: async ({
@@ -52,7 +57,140 @@ export const ChatContextProvider = ({
         throw new Error("Something went wrong");
       }
 
+      setIsLoading(false);
       return response.body;
+    },
+    onMutate: async ({ message }) => {
+      setIsLoading(true);
+      backupMessgae.current = message;
+
+      await utils.getFileMessages.cancel();
+
+      const prevMessage = utils.getFileMessages.getInfiniteData();
+
+      utils.getFileMessages.setInfiniteData({ fileId, limit: 10 }, (old) => {
+        if (!old) {
+          return {
+            pages: [],
+            pageParams: [],
+          };
+        }
+
+        let newPages = [...old.pages];
+
+        let latestPage = newPages[0];
+
+        latestPage.messages = [
+          {
+            id: "temp",
+            text: message,
+            isUserMessage: true,
+            createdAt: new Date().toISOString(),
+          },
+          ...latestPage.messages,
+        ];
+
+        // updating the new page
+        newPages[0] = latestPage;
+
+        // returning the value
+        return {
+          ...old,
+          pages: newPages,
+        };
+      });
+
+      setIsLoading(true);
+
+      return {
+        previousMessage:
+          prevMessage?.pages.flatMap((page) => page.messages) ?? [],
+      };
+    },
+    onSuccess: async (stream) => {
+      setIsLoading(false);
+
+      // get the stream
+      if (!stream) {
+        return toast({
+          title: "Error",
+          description: "Something went wrong try reloading the page",
+          variant: "destructive",
+        });
+      }
+
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      let accReponse = "";
+
+      while (!done) {
+        const { value, done: isDone } = await reader.read();
+
+        if (isDone) {
+          done = true;
+        }
+
+        if (value) {
+          accReponse += decoder.decode(value, { stream: true });
+        }
+
+        utils.getFileMessages.setInfiniteData({ fileId, limit: 10 }, (old) => {
+          if (!old) {
+            return {
+              pages: [],
+              pageParams: [],
+            };
+          }
+
+          let isAiCreated = old.pages.some((page) =>
+            page.messages.some((message) => message.id === "ai-response")
+          );
+
+          let updatedPages = old.pages.map((page) => {
+            if (page == old.pages[0]) {
+              let updatedMessage;
+
+              if (!isAiCreated) {
+                updatedMessage = [
+                  {
+                    id: "ai-response",
+                    text: accReponse,
+                    isUserMessage: false,
+                    createdAt: new Date().toISOString(),
+                  },
+                  ...page.messages,
+                ];
+              } else {
+                updatedMessage = page.messages.map((message) => {
+                  if (message.id === "ai-response") {
+                    return {
+                      ...message,
+                      text: accReponse,
+                    };
+                  }
+                  return message;
+                });
+              }
+
+              return {
+                ...page,
+                messages: updatedMessage,
+              };
+            }
+
+            return page;
+          });
+
+          // Final return
+          return {
+            ...old,
+            pages: updatedPages,
+          };
+          //
+        });
+      }
     },
   });
 
@@ -81,7 +219,5 @@ export const ChatContextProvider = ({
     </ChatContext.Provider>
   );
 };
-
-// Create a custom hook to use the ChatContext
 
 export default ChatContext;
